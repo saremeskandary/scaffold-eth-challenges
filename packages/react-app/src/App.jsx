@@ -486,6 +486,9 @@ function App(props) {
   const buyTokensEvents = useEventListener(readContracts, "Vendor", "BuyTokens", localProvider, 1);
   console.log("📟 buyTokensEvents:", buyTokensEvents);
 
+  const sellTokensEvents = useEventListener(readContracts, "Vendor", "SellTokens", localProvider, 1);
+  console.log("📟 sellTokensEvents:", sellTokensEvents);
+
   const [tokenBuyAmount, setTokenBuyAmount] = useState({
     valid: false,
     value: ''
@@ -516,6 +519,7 @@ function App(props) {
   const [tokenSendAmount, setTokenSendAmount] = useState();
 
   const [buying, setBuying] = useState();
+  const [selling, setSelling] = useState();
 
   let transferDisplay = "";
   if (yourTokenBalance) {
@@ -611,8 +615,8 @@ function App(props) {
                       const newValue = e.target.value.startsWith(".") ? "0." : e.target.value;
                       const buyAmount = {
                         value: newValue,
-                        valid: /^\d*\.?\d+$/.test(newValue)
-                      }
+                        valid: /^\d*\.?\d+$/.test(newValue),
+                      };
                       setTokenBuyAmount(buyAmount);
                     }}
                   />
@@ -634,10 +638,43 @@ function App(props) {
                   </Button>
                 </div>
               </Card>
+              <br />
+              <Card title="Sell Tokens" extra={<a href="#">code</a>}>
+                <div style={{ padding: 8 }}>{tokensPerEth && tokensPerEth.toNumber()} tokens per ETH</div>
+                <div style={{ padding: 8 }}>
+                  <Input
+                    style={{ textAlign: "center" }}
+                    placeholder={"amount of tokens to sell"}
+                    value={tokenSellAmount.value}
+                    onChange={e => {
+                      const newValue = e.target.value.startsWith(".") ? "0." : e.target.value;
+                      const sellAmount = {
+                        value: newValue,
+                        valid: /^\d*\.?\d+$/.test(newValue),
+                      };
+                      setTokenSellAmount(sellAmount);
+                    }}
+                  />
+                  <Balance balance={ethCostToPurchaseTokens} dollarMultiplier={price} />
+                </div>
+
+                <div style={{ padding: 8 }}>
+                  <Button
+                    type={"primary"}
+                    loading={selling}
+                    onClick={async () => {
+                      setSelling(true);
+                      await tx(writeContracts.Vendor.sellTokens({ value: ethCostToPurchaseTokens }));
+                      setSelling(false);
+                    }}
+                    disabled={!tokenSellAmount.valid}
+                  >
+                    Sell Tokens
+                  </Button>
+                </div>
+              </Card>
             </div>
-          
-            
-            
+
             {/*Extra UI for buying the tokens back from the user using "approve" and "sellTokens"
 
             <Divider />
